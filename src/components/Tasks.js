@@ -1,15 +1,12 @@
 import React, { useEffect } from "react";
-import { connect } from "react-redux";
-import { getTasksToShow, fetchTasks, saveTask } from "../redux/tasks";
 import themes from "../themes";
-import { orderBy } from "lodash";
 
 export const Tasks = ({
-  tasksToShow,
-  toggleTask,
-  currentTheme,
-  fetchTasks,
-  fetchError
+  tasksToShow = [],
+  toggleTask = () => {},
+  currentTheme = themes['light'],
+  fetchTasks = () => {},
+  fetchError = null
 }) => {
   useEffect(() => {
     fetchTasks();
@@ -71,20 +68,4 @@ export const Tasks = ({
   );
 };
 
-const mapStateToProps = ({ tasks, UISettings }) => ({
-  tasksToShow: orderBy(getTasksToShow(tasks), ["createdAt"], ["desc"]),
-  currentTheme: themes[UISettings.themeName],
-  fetchError: tasks.collectionFetchError
-});
-const mapDispatchToProps = dispatch => {
-  return {
-    toggleTask: task => {
-      dispatch(saveTask({ ...task, done: !task.done }));
-    },
-    fetchTasks: () => dispatch(fetchTasks())
-  };
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Tasks);
+export default Tasks;

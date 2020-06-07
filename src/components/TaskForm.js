@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { connect } from "react-redux";
-import { saveTask } from "../redux/tasks";
 import themes from "../themes";
 
-export const TaskForm = ({ saveTask, currentTheme, saveError }) => {
+export const TaskForm = ({ saveTask = () => {}, currentTheme = themes["light"], saveError = null }) => {
   const [taskName, setTaskName] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -52,20 +50,4 @@ export const TaskForm = ({ saveTask, currentTheme, saveError }) => {
   );
 };
 
-const mapStateToProps = ({ UISettings, tasks }) => ({
-  currentTheme: themes[UISettings.themeName],
-  saveError: tasks.saveError
-});
-const mapDispatchToProps = dispatch => {
-  return {
-    saveTask: task => {
-      return new Promise((resolve, reject) => {
-        dispatch(saveTask(task, resolve, reject));
-      });
-    }
-  };
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TaskForm);
+export default TaskForm;

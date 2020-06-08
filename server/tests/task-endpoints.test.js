@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../server.js');
 const Task = require('../models/task.model.js');
-const _ = require('lodash')
+const _ = require('lodash');
 
 describe('tasks endpoints', () => {
   describe('POST /tasks', () => {
@@ -70,22 +70,23 @@ describe('tasks endpoints', () => {
       })
     })
 
-    xit('handles pagination', async () => {
+    it('handles pagination', async () => {
       await Task.create({name: "one"});
       await Task.create({name: "two"});
       await Task.create({name: "three"});
       await Task.create({name: "four"});
+      await Task.create({name: "five"});
 
-      return request(app).get('/tasks?limit=2&offset=0').expect(200).then(res => {
-        expect(res.body.length).toBe(2);
-        res.body.forEach((task) => {
-          expect(_.isPlainObject(res.body))
-          expect(task).toHaveProperty('id')
-          expect(task).toHaveProperty('name')
-          expect(task).toHaveProperty('done')
-          expect(typeof task.done).toBe('boolean')
+      return Promise.all([
+        request(app).get('/tasks?per_page=2&page=1').expect(200).then(res => {
+          expect(res.body.length).toBe(2);
+          expect(res.header['content-range']).toBe('1-2/5')
+        }),
+        request(app).get('/tasks?per_page=2&page=2').expect(200).then(res => {
+          expect(res.body.length).toBe(2);
+          expect(res.header['content-range']).toBe('3-4/5')
         })
-      })
+      ])
     })
   });
 
@@ -131,6 +132,13 @@ describe('tasks endpoints', () => {
           expect(_.isPlainObject(res.body))
           expect(res.body).toHaveProperty('errorMessage')
         })
+      })
+    })
+
+    describe('When given task id does not exist', () => {
+      it('returns 404', async () => {
+        const validPayload = {done: false}
+        await request(app).patch('/tasks/123').send(validPayload).expect(404)
       })
     })
   });

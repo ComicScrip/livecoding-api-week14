@@ -23,11 +23,11 @@ class Task {
 
   static async findById (id) {
     return db.query('select * from tasks where id = ?', [id])
-      .then(rows => new Task(rows[0]) || null);
+      .then(rows => rows[0] ? new Task(rows[0]) : null);
   }
 
   static async nameAlreadyExists (name) {
-    return db.query('SELECT count(id) as count FROM tasks WHERE name = ?', [name]).then(rows => {
+    return db.query('select count(id) as count FROM tasks WHERE name = ?', [name]).then(rows => {
       if (rows[0].count) {
         return Promise.resolve(true);
       } else {
@@ -38,7 +38,7 @@ class Task {
 
   static async getSome (limit, offset) {
     const total = await db.query('select count(id) as count from tasks').then(rows => rows[0].count);
-    const sql = 'select * from tasks'
+    let sql = 'select * from tasks'
     if (limit !== undefined && offset !== undefined) {
       sql = `${sql} limit ${limit} offset ${offset}`
     }

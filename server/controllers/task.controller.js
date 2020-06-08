@@ -1,5 +1,5 @@
 const Task = require('../models/task.model.js');
-const Joi = require('@hapi/joi');
+const {tryParseInt}  = require('../helpers/number')
 
 class taskController {
   static async create (req, res) {
@@ -20,23 +20,28 @@ class taskController {
   }
 
   static async findAll (req, res) {
-    const {results: tasks} = await Task.getSome()
-    res.send(tasks)
-  }
-
-  static async findOne (req, res) {
-    
+    const page = tryParseInt(req.query.page, 1);
+    const per_page = tryParseInt(req.query.per_page, 30);
+    const {results, total} = await Task.getSome(per_page, (page - 1) * per_page)
+    const rangeEnd = page * per_page;
+    const rangeBegin = rangeEnd - per_page + 1;
+    res.header('content-range', `${rangeBegin}-${rangeEnd}/${total}`)
+    res.send(results)
   }
 
   static async update (req, res) {
     const {id} = req.params
     const clientPayload = req.body;
 
+    const existingTask = await Task.findById(id)
+    if (!existingTask) {
+      return res.sendStatus(404)
+    }
+
     const {error} = Task.validate(clientPayload, false);
     if (error) {
       return res.status(422).send({errorMessage: error.message, errorDetails: error.details})
     }
-
     const nameExists = await Task.nameAlreadyExists(clientPayload.name)
     if (nameExists) {
       return res.status(409).send({errorMessage: 'A task with this name already exists'})
@@ -44,10 +49,6 @@ class taskController {
 
     const updated = await Task.updateById(id, {...clientPayload, done: !!clientPayload.done})
     res.send(updated)
-  }
-
-  static async delete (req, res) {
-    
   }
 }
 

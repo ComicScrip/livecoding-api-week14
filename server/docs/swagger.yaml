@@ -19,6 +19,21 @@ paths:
       - "task"
       summary: "Get a list of tasks"
       description: ""
+      parameters: 
+      - in: "query"
+        name: "page"
+        description: "The wanted page number"
+        type: 'number'
+      - in: "query"
+        name: "per_page"
+        description: "The number of items per page"
+        type: 'number'
+      headers:
+        content-range: 
+          schema:
+            type: string
+            example: "1-10/10"
+            description: "<range begin>-<range stop>/<total items count>"
       responses:
         "200":
           description: "OK"

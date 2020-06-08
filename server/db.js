@@ -24,19 +24,20 @@ class Database {
     }
 
     this.connection = mysql.createPool(config);
+
     return this;
   }
 
-  query (...args) {
+  async query (...args) {
     return new Promise((resolve, reject) => {
       this.connection.query(...args, (err, res) => {
         if (err) reject(err);
         else resolve(res);
       });
-    });
+    })
   }
 
-  closeConnection () {
+  async closeConnection () {
     return new Promise((resolve, reject) => {
       if (this.connection) {
         this.connection.end((err, res) => {
@@ -49,7 +50,7 @@ class Database {
     });
   }
 
-  deleteAllData () {
+  async deleteAllData () {
     return this.query(`
       TRUNCATE tasks;
     `);

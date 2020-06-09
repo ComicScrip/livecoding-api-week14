@@ -1,12 +1,13 @@
 import React from "react";
 import "../styles.css";
+import { connect } from "react-redux";
 import themes from "../themes";
 import ThemeSwitcherContainer from "./ThemeSwitcher";
 import TasksContainer from "./Tasks";
 import FiltersContainer from "./Filters";
 import TaskFormContainer from "./TaskForm";
 
-function App({ currentTheme = themes["light"] }) {
+function App({ currentTheme }) {
   return (
     <div className="App" style={{ backgroundColor: currentTheme.background }}>
       <ThemeSwitcherContainer />
@@ -18,4 +19,7 @@ function App({ currentTheme = themes["light"] }) {
   );
 }
 
-export default App;
+const mapStateToProps = ({ UISettings: { themeName } }) => ({
+  currentTheme: themes[themeName]
+});
+export default connect(mapStateToProps)(App);

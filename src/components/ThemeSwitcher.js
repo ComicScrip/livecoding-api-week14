@@ -1,11 +1,13 @@
 import React from "react";
+import { connect } from "react-redux";
 import themes from "../themes";
+import { changeTheme } from "../redux/ui-settings";
 
 export const ThemeSwitcher = ({
-  currentTheme = themes['light'],
-  currentThemeName = 'light',
-  changeThemeToLight = () => {},
-  changeThemeToDark = () => {}
+  currentTheme,
+  currentThemeName,
+  changeThemeToLight,
+  changeThemeToDark
 }) => (
   <button
     style={{ color: currentTheme.foreground }}
@@ -17,4 +19,15 @@ export const ThemeSwitcher = ({
   </button>
 );
 
-export default ThemeSwitcher;
+const mapStateToProps = ({ UISettings: { themeName } }) => ({
+  currentThemeName: themeName,
+  currentTheme: themes[themeName]
+});
+const mapDispatchToProps = dispatch => ({
+  changeThemeToDark: () => dispatch(changeTheme("dark")),
+  changeThemeToLight: () => dispatch(changeTheme("light"))
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ThemeSwitcher);

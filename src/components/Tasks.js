@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
+import { connect } from "react-redux";
+import { getTasksToShow, fetchTasks, saveTask } from "../redux/tasks";
 import themes from "../themes";
 
 export const Tasks = ({
-  tasksToShow = [],
-  toggleTask = () => {},
-  currentTheme = themes['light'],
-  fetchTasks = () => {},
-  fetchError = null
+  tasksToShow,
+  toggleTask,
+  currentTheme,
+  fetchTasks,
+  fetchError,
+  loading
 }) => {
   useEffect(() => {
     fetchTasks();
@@ -14,22 +17,12 @@ export const Tasks = ({
 
   const tdStyle = { color: currentTheme.foreground };
 
+  if (loading) return 'Loading...'
+
   if (fetchError) {
     return (
       <div style={{ color: currentTheme.foreground }}>
         <p className="errorText">An error occured while fetching the tasks.</p>
-        <p>
-          {" "}
-          Maybe you forgot to change the{" "}
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://wild-tasks-api.herokuapp.com"
-          >
-            API_KEY
-          </a>{" "}
-          constant in redux/tasks.js ?
-        </p>
         <button style={{ color: currentTheme.foreground }} onClick={fetchTasks}>
           Retry
         </button>
@@ -68,4 +61,21 @@ export const Tasks = ({
   );
 };
 
-export default Tasks;
+const mapStateToProps = ({ tasks, UISettings }) => ({
+  tasksToShow: getTasksToShow(tasks),
+  loading: tasks.collectionIsLoading,
+  currentTheme: themes[UISettings.themeName],
+  fetchError: tasks.collectionFetchError
+});
+const mapDispatchToProps = dispatch => {
+  return {
+    toggleTask: task => {
+      dispatch(saveTask({ ...task, done: !task.done }));
+    },
+    fetchTasks: () => dispatch(fetchTasks())
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Tasks);

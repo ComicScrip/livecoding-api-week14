@@ -16,10 +16,6 @@ class taskController {
   static async update (req, res) {
     
   }
-
-  static async delete (req, res) {
-    
-  }
 }
 
 module.exports = taskController;

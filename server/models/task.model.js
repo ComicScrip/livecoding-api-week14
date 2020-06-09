@@ -8,12 +8,12 @@ class Task {
     this.done = !!task.done;
   }
 
-  static validate(attributes, forCreation = true) {
+  static validate (attributes, forCreation = true) {
     const schema = Joi.object({
       name: Joi.string().min(1).max(30),
-      done: Joi.bool().optional(),
+      done: Joi.bool().optional()
     });
-    return schema.validate(attributes, {abortEarly: false, presence: forCreation ? 'required' : 'optional'})
+    return schema.validate(attributes, { abortEarly: false, presence: forCreation ? 'required' : 'optional' });
   }
 
   static async create (newTask) {
@@ -38,9 +38,9 @@ class Task {
 
   static async getSome (limit, offset) {
     const total = await db.query('select count(id) as count from tasks').then(rows => rows[0].count);
-    let sql = 'select * from tasks'
+    let sql = 'select * from tasks';
     if (limit !== undefined && offset !== undefined) {
-      sql = `${sql} limit ${limit} offset ${offset}`
+      sql = `${sql} limit ${limit} offset ${offset}`;
     }
 
     return db.query(sql).then(rows => ({

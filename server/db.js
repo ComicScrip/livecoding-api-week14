@@ -34,7 +34,7 @@ class Database {
         if (err) reject(err);
         else resolve(res);
       });
-    })
+    });
   }
 
   async closeConnection () {

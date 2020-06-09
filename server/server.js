@@ -17,9 +17,9 @@ process.on('uncaughtException', error => {
 });
 process.on('beforeExit', () => {
   app.close((err) => {
-    if (err) console.error(JSON.stringify(error), error.stack)
+    if (err) console.error(JSON.stringify(err), err.stack);
   });
-})
+});
 
 // middlewares
 app.use(express.json());
@@ -33,8 +33,8 @@ app.use('/', (req, res) => { res.redirect('/tasks'); });
 app.use((error, req, res, next) => {
   console.error(error.stack);
   res.status(500).send('Something Broke!');
-})
-app.set('x-powered-by', false)
+});
+app.set('x-powered-by', false);
 
 // set port, listen for requests
 const server = app.listen(PORT, () => {

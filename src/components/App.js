@@ -1,25 +1,24 @@
 import React from "react";
 import "../styles.css";
-import { connect } from "react-redux";
-import themes from "../themes";
-import ThemeSwitcherContainer from "./ThemeSwitcher";
-import TasksContainer from "./Tasks";
-import FiltersContainer from "./Filters";
-import TaskFormContainer from "./TaskForm";
+import Tasks from "./Tasks";
+import TaskForm from "./TaskForm";
+import { defaultFetcher } from "../API";
+import {SWRConfig} from 'swr'
 
-function App({ currentTheme }) {
+function App() {
   return (
-    <div className="App" style={{ backgroundColor: currentTheme.background }}>
-      <ThemeSwitcherContainer />
-      <h1 style={{ color: currentTheme.foreground }}>Tasks</h1>
-      <TaskFormContainer />
-      <FiltersContainer />
-      <TasksContainer />
-    </div>
+    <SWRConfig 
+      value={{
+        fetcher: defaultFetcher
+      }}
+    >
+      <div className="App">
+        <h1>Tasks</h1>
+        <TaskForm />
+        <Tasks />
+      </div>
+    </SWRConfig>
   );
 }
 
-const mapStateToProps = ({ UISettings: { themeName } }) => ({
-  currentTheme: themes[themeName]
-});
-export default connect(mapStateToProps)(App);
+export default App;

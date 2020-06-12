@@ -1,55 +1,81 @@
-import React, { useEffect } from "react";
-import { connect } from "react-redux";
-import { getTasksToShow, fetchTasks, saveTask } from "../redux/tasks";
-import themes from "../themes";
+import React from "react";
+import useSWR, {mutate} from 'swr'
+import API from "../API";
+import produce from 'immer'
+import {findIndex} from 'lodash'
 
-export const Tasks = ({
-  tasksToShow,
-  toggleTask,
-  currentTheme,
-  fetchTasks,
-  fetchError,
-  loading
-}) => {
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  const tdStyle = { color: currentTheme.foreground };
-
-  if (loading) return 'Loading...'
+export const Tasks = () => {
+  const {data: tasksToShow, error: fetchError} = useSWR('/tasks');
 
   if (fetchError) {
     return (
-      <div style={{ color: currentTheme.foreground }}>
         <p className="errorText">An error occured while fetching the tasks.</p>
-        <button style={{ color: currentTheme.foreground }} onClick={fetchTasks}>
-          Retry
-        </button>
-      </div>
     );
+  }
+  if (!tasksToShow) return 'Loading...'
+
+  const patchTaskLocally = (id, newTaskAttributes) => {
+    mutate('/tasks', async tasks => {
+      return produce(tasks, draft => {
+        const localTaskIndex = findIndex(draft, {id});
+        draft[localTaskIndex] = {...draft[localTaskIndex], ...newTaskAttributes}
+      })
+    }, false)
+  }
+
+  const toggleTaskAndRefreshList = async (task) => {
+    try {
+      patchTaskLocally(task.id, {_saving: true})
+      await API.patch('/tasks/' + task.id, {done: !task.done})
+      mutate('/tasks')
+    } catch (err) {
+      patchTaskLocally(task.id, {_saving: false})
+      console.error(err)
+    }
+  }
+
+  const toggleTaskWithoutRefreshingList = async (task) => {
+    try {
+      patchTaskLocally(task.id, {_saving: true})
+      const updatedTask = await API.patch('/tasks/' + task.id, {done: !task.done}).then(res => res.data)
+      patchTaskLocally(updatedTask.id, {done: updatedTask.done, _saving: false})
+    } catch (err) {
+      console.error(err)
+      patchTaskLocally(task.id, {_saving: false})
+    }
+  }
+
+  const optimisticallyToggleTask = async task => {
+    try {
+      patchTaskLocally(task.id, {done: !task.done, _saving: true})
+      const updatedTask = await API.patch('/tasks/' + task.id, {done: !task.done}).then(res => res.data)
+      patchTaskLocally(updatedTask.id, {done: updatedTask.done, _saving: false})
+    } catch (err) {
+      patchTaskLocally(task.id, {done: task.done, _saving: false})
+      console.error(err)
+    } 
   }
 
   return (
     <table>
       <thead>
         <tr>
-          <td style={tdStyle}>Name</td>
-          <td style={tdStyle}>Done ?</td>
+          <td>Name</td>
+          <td>Done ?</td>
         </tr>
       </thead>
       <tbody>
         {tasksToShow.map(t => {
           return (
             <tr key={t.id}>
-              <td style={tdStyle}>{t.name}</td>
-              <td style={tdStyle}>
+              <td>{t.name}</td>
+              <td>
                 <input
                   disabled={!!t._saving}
                   type="checkbox"
                   checked={t.done}
                   onChange={() => {
-                    toggleTask(t);
+                    optimisticallyToggleTask(t);
                   }}
                 />
               </td>
@@ -61,21 +87,4 @@ export const Tasks = ({
   );
 };
 
-const mapStateToProps = ({ tasks, UISettings }) => ({
-  tasksToShow: getTasksToShow(tasks),
-  loading: tasks.collectionIsLoading,
-  currentTheme: themes[UISettings.themeName],
-  fetchError: tasks.collectionFetchError
-});
-const mapDispatchToProps = dispatch => {
-  return {
-    toggleTask: task => {
-      dispatch(saveTask({ ...task, done: !task.done }));
-    },
-    fetchTasks: () => dispatch(fetchTasks())
-  };
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Tasks);
+export default Tasks;

@@ -1,35 +1,30 @@
 import React, { useState } from "react";
-import { connect } from "react-redux";
-import { saveTask } from "../redux/tasks";
-import themes from "../themes";
+import {mutate} from 'swr'
+import API from "../API";
 
-export const TaskForm = ({ saveTask, currentTheme, saveError }) => {
+export const TaskForm = () => {
   const [taskName, setTaskName] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const inputStyle = {
-    backgroundColor: currentTheme.background,
-    color: currentTheme.foreground
-  };
-
-  const handleSave = e => {
-    e.preventDefault();
-    setSaving(true);
-    saveTask({ name: taskName, done: false })
-      .then(() => {
-        setTaskName("");
-      })
-      .catch(() => {})
-      .finally(() => {
-        setSaving(false);
-      });
-  };
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const saveTask = async () => {
+    try {
+      setSaving(true); setSaveError(false);
+      mutate('/tasks', async tasks => {
+        const newTask = await API.post('/tasks', {name: taskName, done: false})
+        return [...tasks, newTask]
+      }, false)
+    } catch(err) {
+      console.error(err)
+      setSaveError(true)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <form>
       <input
         required
-        style={inputStyle}
         name="name"
         id="name"
         placeholder="New task name"
@@ -39,9 +34,8 @@ export const TaskForm = ({ saveTask, currentTheme, saveError }) => {
         }}
       />
       <button
-        style={inputStyle}
+        onClick={() => saveTask({name: taskName, done: false})}
         disabled={saving || taskName === ""}
-        onClick={handleSave}
       >
         Save
       </button>
@@ -52,20 +46,4 @@ export const TaskForm = ({ saveTask, currentTheme, saveError }) => {
   );
 };
 
-const mapStateToProps = ({ UISettings, tasks }) => ({
-  currentTheme: themes[UISettings.themeName],
-  saveError: tasks.saveError
-});
-const mapDispatchToProps = dispatch => {
-  return {
-    saveTask: task => {
-      return new Promise((resolve, reject) => {
-        dispatch(saveTask(task, resolve, reject));
-      });
-    }
-  };
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TaskForm);
+export default TaskForm

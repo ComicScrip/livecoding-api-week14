@@ -52,6 +52,10 @@ class Task {
   static async updateById (id, task) {
     return db.query('UPDATE tasks SET ? WHERE id = ?', [task, id]).then(() => this.findById(id));
   }
+
+  static async deleteById (id) {
+    return db.query('DELETE FROM tasks WHERE id = ?', [id]);
+  }
 }
 
 module.exports = Task;

@@ -1,24 +1,15 @@
-import React, { useState } from "react";
-import {mutate} from 'swr'
-import API from "../API";
+import React from "react";
+import useResourceCollection from "../hooks/useResourceCollection";
+import useFormData from "../hooks/useFormData";
 
 export const TaskForm = () => {
-  const [taskName, setTaskName] = useState("");
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState(false)
-  const saveTask = async () => {
-    try {
-      setSaving(true); setSaveError(false);
-      mutate('/tasks', async tasks => {
-        const newTask = await API.post('/tasks', {name: taskName, done: false})
-        return [...tasks, newTask]
-      }, false)
-    } catch(err) {
-      console.error(err)
-      setSaveError(true)
-    } finally {
-      setSaving(false)
-    }
+  const {fields, setFields, handleFieldChange} = useFormData({name: '', done: false});
+  const {saveResource, newResourceIsSaving, newResourceSaveError} = useResourceCollection('/tasks')
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    await saveResource(fields)
+    setFields({name: ''})
   }
 
   return (
@@ -28,18 +19,16 @@ export const TaskForm = () => {
         name="name"
         id="name"
         placeholder="New task name"
-        value={taskName}
-        onChange={event => {
-          setTaskName(event.target.value);
-        }}
+        value={fields.name}
+        onChange={handleFieldChange}
       />
       <button
-        onClick={() => saveTask({name: taskName, done: false})}
-        disabled={saving || taskName === ""}
+        onClick={handleSubmit}
+        disabled={newResourceIsSaving || fields.name === ""}
       >
         Save
       </button>
-      {saveError && (
+      {newResourceSaveError && (
         <p className="errorText">An error occured while saving the task</p>
       )}
     </form>

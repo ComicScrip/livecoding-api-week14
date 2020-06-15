@@ -1,24 +1,11 @@
 import React, { useState } from "react";
-import {mutate} from 'swr'
-import API from "../API";
 
 export const TaskForm = () => {
   const [taskName, setTaskName] = useState("");
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const saveTask = async () => {
-    try {
-      setSaving(true); setSaveError(false);
-      mutate('/tasks', async tasks => {
-        const newTask = await API.post('/tasks', {name: taskName, done: false})
-        return [...tasks, newTask]
-      }, false)
-    } catch(err) {
-      console.error(err)
-      setSaveError(true)
-    } finally {
-      setSaving(false)
-    }
+
   }
 
   return (
